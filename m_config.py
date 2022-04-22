@@ -1,11 +1,13 @@
 import re
 from datetime import datetime
+from pathlib import Path
 from enum import Enum
 
 # ------------------------------------------------------------------------------
 # Project directory
 # DIR_ROOT = "/home/phuc/api/mtab"
-DIR_ROOT = "/Users/phucnguyen/git/mtab"
+# DIR_ROOT = "/Users/phucnguyen/git/mtab"
+DIR_ROOT = Path(__file__).parent / "data/mtab"
 # DIR_ROOT = "/Users/mtab/git/mtab"
 
 
