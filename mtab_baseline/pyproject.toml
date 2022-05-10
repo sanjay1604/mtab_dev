@@ -7,8 +7,8 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-sem-desc = "^3.3.1"
-kgdata = "^1.6.3"
+sem-desc = "^3.4.2"
+kgdata = "^1.7.2"
 charamel = "^1.0.0"
 clevercsv = "0.6.8"
 ftfy = "^6.1.1"
