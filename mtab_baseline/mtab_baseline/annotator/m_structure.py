@@ -350,7 +350,11 @@ def run(
             predict_headers(table_obj)
     # <<< MODIFIED END
     select_dtype_column(table_obj)
-    predict_core_attribute(table_obj, tar_cpa, tar_cta)
+    # >>> MODIFIED START
+    # if core attribute is passed down, use it
+    if "core_attribute" not in table_obj:
+        predict_core_attribute(table_obj, tar_cpa, tar_cta)
+    # <<< MODIFIED END
     predict_targets(
         table_obj,
         tar_cea,

@@ -30,7 +30,8 @@ def run(
     search_mode="a",
     # >>> MODIFIED START
     table_headers: Optional[List[int]] = None,
-    table_links: Optional[Dict[Tuple[int, int], List[str]]] = None
+    table_links: Optional[Dict[Tuple[int, int], List[str]]] = None,
+    table_core_attribute: Optional[int] = None,
     # >>> MODIFIED END
 ):
     start = time()
@@ -45,6 +46,9 @@ def run(
         # pass down the table links so that candidate generation in m_semantic do not need to predict it
         if table_links is not None:
             table_obj["__links"] = table_links
+        # pass down the table core attribute so that m_structure do not need to predict it
+        if table_core_attribute is not None:
+            table_obj["core_attribute"] = table_core_attribute
         # >>> MODIFIED END
 
         # 2. Call structure annotation
