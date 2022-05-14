@@ -40,19 +40,40 @@ def predict(
         m_f.init(is_log=True)
         MyMItem.init(qnodes, qnode_redirections={})
 
-    outputs = []
-    for example in tqdm(examples):
-        table_links = {(ri + 1, ci): lst for (ri, ci), lst in example["links"].items()}
-        out, runtime = run(
-            source_type=SourceType.OBJ,
-            source=convert_table(example["table"]),
-            table_name=example["table"].table_id,
-            table_headers=[0],
-            table_links=table_links,
-        )
+    # outputs = []
+    # for example in tqdm(examples):
+    #     table_links = {(ri + 1, ci): lst for (ri, ci), lst in example["links"].items()}
+    #     out, runtime = run(
+    #         source_type=SourceType.OBJ,
+    #         source=convert_table(example["table"]),
+    #         table_name=example["table"].table_id,
+    #         table_headers=[0],
+    #         table_links=table_links,
+    #         table_core_attribute=example["subj_col"][0]
+    #         if example["subj_col"] is not None
+    #         else None,
+    #     )
 
-        outputs.append(process_output(out))
+    #     outputs.append(process_output(out))
+    outputs = []
+    outputs.append(predict_one_example(examples[0]))
+    outputs += M.parallel_map(predict_one_example, examples[1:], show_progress=True)
     return outputs
+
+
+def predict_one_example(example: Example):
+    table_links = {(ri + 1, ci): lst for (ri, ci), lst in example["links"].items()}
+    out, runtime = run(
+        source_type=SourceType.OBJ,
+        source=convert_table(example["table"]),
+        table_name=example["table"].table_id,
+        table_headers=[0],
+        table_links=table_links,
+        table_core_attribute=example["subj_col"][0]
+        if example["subj_col"] is not None
+        else None,
+    )
+    return process_output(out)
 
 
 def process_output(out: dict) -> Output:
