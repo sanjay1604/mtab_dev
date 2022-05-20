@@ -1,14 +1,7 @@
 from collections import Counter, defaultdict
 from typing import IO, Mapping, cast
 from kgdata.wikidata.models import (
-    QNode,
-    DataValueGlobeCoordinate,
-    DataValueTime,
-    DataValueString,
-    DataValueMonolingualText,
-    DataValueQuantity,
-    DataValueType,
-    DataValueWikibaseEntityId,
+    WDEntity,
 )
 from numpy import isin
 from api import m_f
@@ -20,13 +13,13 @@ class MyMItem:
     instance = None
 
     def __init__(
-        self, qnodes: Mapping[str, QNode], qnode_redirections: Mapping[str, str]
+        self, qnodes: Mapping[str, WDEntity], qnode_redirections: Mapping[str, str]
     ):
         self.qnodes = qnodes
         self.qnode_redirections = qnode_redirections
 
     @staticmethod
-    def init(qnodes: Mapping[str, QNode], qnode_redirections: Mapping[str, str]):
+    def init(qnodes: Mapping[str, WDEntity], qnode_redirections: Mapping[str, str]):
         assert MyMItem.instance is None
         MyMItem.instance = MyMItem(qnodes, qnode_redirections)
         m_f.cf.m_wiki_items = MyMItem.instance
@@ -46,34 +39,32 @@ class MyMItem:
         qnode = self.qnodes[wd_id]
         for prop, stmts in qnode.props.items():
             for stmt in stmts:
-                if stmt.value.is_time():
-                    claim_value = cast(DataValueTime, stmt.value.value)["time"]
+                if stmt.value.is_time(stmt.value):
+                    claim_value = stmt.value.value["time"]
                     claim_value = claim_value.replace("T00:00:00Z", "")
                     if claim_value[0] == "+":
                         claim_value = claim_value[1:]
                     outs["time"][prop].add(claim_value)
-                elif stmt.value.is_quantity():
-                    claim_unit = cast(DataValueQuantity, stmt.value.value)["unit"]
+                elif stmt.value.is_quantity(stmt.value):
+                    claim_unit = stmt.value.value["unit"]
                     claim_unit = claim_unit.replace(m_config.WD, "")
 
-                    claim_value = cast(DataValueQuantity, stmt.value.value)["amount"]
+                    claim_value = stmt.value.value["amount"]
                     if claim_value[0] == "+":
                         claim_value = claim_value[1:]
 
                     outs["quantity"][prop].add((claim_value, claim_unit))
-                elif stmt.value.is_string():
-                    claim_value = cast(DataValueString, stmt.value.value)
+                elif stmt.value.is_string(stmt.value):
+                    claim_value = stmt.value.value
                     outs["string"][prop].add(claim_value)
-                elif stmt.value.is_mono_lingual_text():
-                    claim_value = cast(DataValueMonolingualText, stmt.value.value)[
-                        "text"
-                    ]
+                elif stmt.value.is_mono_lingual_text(stmt.value):
+                    claim_value = stmt.value.value["text"]
                     outs["string"][prop].add(claim_value)
                 else:
                     # they don't handle coordinates
-                    assert (
-                        stmt.value.is_entity_id() or stmt.value.is_globe_coordinate()
-                    ), stmt.value
+                    assert stmt.value.is_entity_id(
+                        stmt.value
+                    ) or stmt.value.is_globe_coordinate(stmt.value), stmt.value
         return outs
 
     def get_label(self, wd_id):
@@ -150,10 +141,8 @@ class MyMItem:
         qnode = self.qnodes[wd_id]
         for prop, stmts in qnode.props.items():
             for stmt in stmts:
-                if stmt.value.is_entity_id():
-                    claim_value = cast(DataValueWikibaseEntityId, stmt.value.value)[
-                        "id"
-                    ]
+                if stmt.value.is_entity_id(stmt.value):
+                    claim_value = stmt.value.value["id"]
                     outs[prop].add(claim_value)
         return outs
 
@@ -166,7 +155,7 @@ class MyMItem:
         qnode_types = [
             stmt.value.as_entity_id()
             for stmt in qnode.props.get("P31", [])
-            if stmt.value.is_entity_id()
+            if stmt.value.is_entity_id(stmt.value)
         ]
 
         if get_label:
@@ -179,7 +168,7 @@ class MyMItem:
         qnode_types = [
             stmt.value.as_entity_id()
             for stmt in qnode.props.get("P279", [])
-            if stmt.value.is_entity_id()
+            if stmt.value.is_entity_id(stmt.value)
         ]
 
         if get_label:

@@ -7,14 +7,14 @@ sys.path.append(str(root_dir))
 
 from typing import Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from sm.prelude import I, M, O
-from kgdata.wikidata.models import QNode
+from kgdata.wikidata.models import WDEntity
 from m_config import SourceType
 from tqdm.auto import tqdm
 from api import m_f
 from mtab_baseline.annotator.main import run
 from sm.prelude import I, M, O
 from mtab_baseline.resources.m_item import MyMItem
-from kgdata.wikidata.db import get_qnode_db, get_qnode_redirection_db
+from kgdata.wikidata.db import get_entity_db, get_entity_redirection_db
 
 Output = TypedDict(
     "MTab",
@@ -33,7 +33,7 @@ Example = TypedDict(
 
 
 def predict(
-    qnodes: Mapping[str, QNode],
+    qnodes: Mapping[str, WDEntity],
     examples: List[Example],
 ) -> List[List[Output]]:
     if MyMItem.instance is None:

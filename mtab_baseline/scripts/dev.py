@@ -14,7 +14,7 @@ from api import m_f
 from mtab_baseline.annotator.main import run
 from sm.prelude import I, M, O
 from mtab_baseline.resources.m_item import MyMItem
-from kgdata.wikidata.db import get_qnode_db, get_qnode_redirection_db
+from kgdata.wikidata.db import get_entity_db, get_entity_redirection_db
 
 data_dir = Path("/workspace/sm-dev/data/home/cache/t211229_baselines/wt250")
 
@@ -26,10 +26,10 @@ table_id, table_fsname = tables[idx]
 table_file = data_dir / f"inputs/s{idx:03d}_{table_fsname}.json.gz"
 example = M.deserialize_json(table_file)
 table = I.ColumnBasedTable.from_dict(example["table"])
-qnodes = get_qnode_db(
+qnodes = get_entity_db(
     index["qnodes"], create_if_missing=False, read_only=True, proxy=False
 )
-qnode_redirections = get_qnode_redirection_db(
+qnode_redirections = get_entity_redirection_db(
     index["qnodes"].replace("qnodes.db", "qnode_redirections.db"),
     create_if_missing=False,
     read_only=True,
