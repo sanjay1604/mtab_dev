@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "mtab_baseline"
-version = "2.0.0"
+version = "2.0.1"
 description = ""
 authors = ["Binh Vu <binh@toan2.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-sem-desc = "^3.5.1"
+sem-desc = "^3.5.2"
 kgdata = "^2.3.0"
 charamel = "^1.0.0"
 clevercsv = "0.6.8"
