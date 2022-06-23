@@ -51,7 +51,7 @@ def convert_table(table: I.ColumnBasedTable):
 
 
 m_f.init(is_log=True)
-MyMItem.init(qnodes.cache_dict(), qnode_redirections)
+MyMItem.init(qnodes.cache(), qnode_redirections)
 
 result, runtime = run(
     source_type=SourceType.OBJ,
