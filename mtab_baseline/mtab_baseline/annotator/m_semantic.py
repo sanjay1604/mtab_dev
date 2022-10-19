@@ -299,25 +299,6 @@ def generate_candidates(table_obj, limit=cf.LIMIT_GEN_CAN, mode="a"):
     return cans
 
 
-def generate_candidates_from_links(table_obj):
-    """Generate candidate entities from the given links"""
-    links: Dict[Tuple[int, int], List[str]] = table_obj["__links"]
-
-    cans = [[[] for _ in r] for r in table_obj["cell"]["values"]]
-    for r_i, r_obj in enumerate(table_obj["cell"]["values"]):
-        for c_i, c_obj in enumerate(r_obj):
-            if (
-                r_i in table_obj["headers"]
-                or not c_obj
-                or c_obj.lower() in cf.NONE_CELLS
-            ):
-                continue
-
-            if (r_i, c_i) in links:
-                cans[r_i][c_i] = [(ent, 1) for ent in links[(r_i, c_i)]]
-    return cans
-
-
 def run(table_obj, limit=cf.LIMIT_GEN_CAN, search_mode="a"):
     res_cea, res_cpa, res_cta = [], defaultdict(), []
     log_m = "Table %s: Size: %dx%d - %d cells" % (
@@ -355,7 +336,9 @@ def run(table_obj, limit=cf.LIMIT_GEN_CAN, search_mode="a"):
     # entity lookup
     # >>> MODIFIED START
     # if links are provided, we use that instead of calling the original generate_candidates
-    if "__links" in table_obj:
+    if "__candidates" in table_obj:
+        cans_e = generate_candidates_from_given_lists(table_obj, limit=limit)
+    elif "__links" in table_obj:
         cans_e = generate_candidates_from_links(table_obj)
     else:
         cans_e = generate_candidates(table_obj, limit=limit, mode=search_mode)
@@ -1250,6 +1233,139 @@ def annotate(dir_tables, dir_cea, dir_cta, dir_cpa, n_cpu=1, is_screen=False):
 
     return cea, cta, cpa
 
+
+# >>> MODIFIED START
+def generate_candidates_from_links(table_obj):
+    """Generate candidate entities from the given links"""
+    links: Dict[Tuple[int, int], List[str]] = table_obj["__links"]
+
+    cans = [[[] for _ in r] for r in table_obj["cell"]["values"]]
+    for r_i, r_obj in enumerate(table_obj["cell"]["values"]):
+        for c_i, c_obj in enumerate(r_obj):
+            if (
+                r_i in table_obj["headers"]
+                or not c_obj
+                or c_obj.lower() in cf.NONE_CELLS
+            ):
+                continue
+
+            if (r_i, c_i) in links:
+                cans[r_i][c_i] = [(ent, 1) for ent in links[(r_i, c_i)]]
+    return cans
+
+
+def generate_candidates_from_given_lists(table_obj, limit: int):
+    """Generate candidate entities from the given lists"""
+    lang = "en"
+
+    # original function from mtab_dev.api.lookup.m_entity_search.search
+    from api import m_f
+    from api.utilities import m_sim
+
+    def get_wd_score(query, _responds_label):
+        # >>> MODIFIED_START
+        # assign here so we don't have to repeatedly call the same function
+        m_items = m_f.m_items()
+        # <<< MODIFIED_END
+        _responds = defaultdict(float)
+        for _r_i, (_respond, _res_s) in enumerate(_responds_label):
+            # >>> MODIFIED START: this seems that their responds_label is the label
+            # of the entity so they need to get the id out of it
+            # so we comment it out
+            _respond_wds = [(_respond, m_items.get_pagerank(_respond))]
+
+            # >>> COMMENTED BELOW
+            # if lang == "en":
+            #     _respond_wds = m_f.m_item_labels().get_wd_qid_en(
+            #         _respond, page_rank=True
+            #     )
+            #     if not _respond_wds:
+            #         _respond_wds = m_f.m_item_labels().get_wd_qid_all(
+            #             _respond, page_rank=True
+            #         )
+            # else:
+            #     _respond_wds = m_f.m_item_labels().get_wd_qid_all(
+            #         _respond, page_rank=True
+            #     )
+            # if not _respond_wds:
+            #     continue
+            # >>> MODIFIED END
+
+            for _res_wd, _prank in _respond_wds:
+                wd_type = m_f.m_items().get_instance_of(_res_wd)
+                if wd_type and "Q4167410" in wd_type:
+                    continue
+                wd_wp = m_f.m_items().get_wikipedia_title(_res_wd)
+                if wd_wp and "(disambiguation)" in wd_wp:
+                    continue
+                if lang == "en":
+                    # _responds[_res_wd] = max(_responds[_res_wd], _res_s * 0.7 + _prank * 0.3)
+
+                    main_label = m_f.m_items().get_label(_res_wd)
+                    main_label_sim = 0
+                    if main_label:
+                        main_label_sim = m_sim.sim_fuzz_ratio(main_label, query)
+
+                    label_en = m_f.m_items().get_labels(_res_wd)
+                    label_en_sim = 0
+                    if label_en:
+                        label_en_closest = m_sim.get_closest(query, label_en)
+                        if label_en_closest:
+                            c_label, label_en_sim = label_en_closest
+
+                    _responds[_res_wd] = max(
+                        _responds[_res_wd],
+                        _res_s * 0.4
+                        + _prank * 0.3
+                        + main_label_sim * 0.001
+                        + label_en_sim * 0.3,
+                    )
+                else:
+                    label_all = m_f.m_items().get_labels(_res_wd, multilingual=True)
+                    label_all_sim = 0
+                    if label_all:
+                        label_all_closest = m_sim.get_closest(query, label_all)
+                        if label_all_closest:
+                            c_label, label_all_sim = label_all_closest
+
+                    _responds[_res_wd] = max(
+                        _responds[_res_wd],
+                        _res_s * 0.4 + _prank * 0.3 + label_all_sim * 0.3,
+                    )
+                # if limit and len(_responds) > limit:
+                #     break
+            if limit and len(_responds) > limit:
+                break
+        return _responds
+
+    candidates: Dict[Tuple[int, int], List[Tuple[str, float]]] = table_obj[
+        "__candidates"
+    ]
+    cans = [[[] for _ in r] for r in table_obj["cell"]["values"]]
+    for r_i, r_obj in enumerate(table_obj["cell"]["values"]):
+        for c_i, c_obj in enumerate(r_obj):
+            if (
+                r_i in table_obj["headers"]
+                or not c_obj
+                or c_obj.lower() in cf.NONE_CELLS
+            ):
+                continue
+
+            if (r_i, c_i) in candidates:
+                lst = candidates[r_i, c_i]
+                # min-max scaling score similar to mtab api
+                scores = [s for _, s in lst]
+                smin = min(scores)
+                smax = max(scores)
+                if smax > smin:
+                    lst = [(qid, (s - smin) / (smax - smin)) for qid, s in lst]
+                else:
+                    lst = [(qid, 1) for qid, s in lst]
+                cans[r_i][c_i] = list(get_wd_score(c_obj, lst).items())
+    return cans
+
+
+# >>> MODIFIED END
 
 if __name__ == "__main__":
     m_f.init()

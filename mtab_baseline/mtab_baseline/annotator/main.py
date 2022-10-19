@@ -31,6 +31,7 @@ def run(
     # >>> MODIFIED START
     table_headers: Optional[List[int]] = None,
     table_links: Optional[Dict[Tuple[int, int], List[str]]] = None,
+    table_candidates: Optional[Dict[Tuple[int, int], List[Tuple[str, float]]]] = None,
     table_core_attribute: Optional[int] = None,
     # >>> MODIFIED END
 ):
@@ -46,6 +47,9 @@ def run(
         # pass down the table links so that candidate generation in m_semantic do not need to predict it
         if table_links is not None:
             table_obj["__links"] = table_links
+        # pass down the table candidates so that candidate generation in m_semantic can use this instead of querying elasticsearch
+        if table_candidates is not None:
+            table_obj["__candidates"] = table_candidates
         # pass down the table core attribute so that m_structure do not need to predict it
         if table_core_attribute is not None:
             table_obj["core_attribute"] = table_core_attribute

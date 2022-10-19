@@ -1,9 +1,9 @@
 import sys
 from pathlib import Path
 
-root_dir = Path(__file__).absolute().parent.parent.parent
+# root_dir = Path(__file__).absolute().parent.parent.parent
 
-sys.path.append(str(root_dir))
+# sys.path.append(str(root_dir))
 
 from typing import Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from sm.prelude import I, M, O
@@ -16,10 +16,16 @@ from sm.prelude import I, M, O
 from mtab_baseline.resources.m_item import MyMItem
 from kgdata.wikidata.db import get_entity_db, get_entity_redirection_db
 from api.annotator import m_input
+from loguru import logger
 
 Output = TypedDict(
     "MTab",
-    {"cpa": List[Tuple[int, int, str]], "cta": Dict[int, str], "out": dict},
+    {
+        "cpa": List[Tuple[int, int, str]],
+        "cta": Dict[int, str],
+        "cea": Dict[Tuple[int, int], str],
+        "out": dict,
+    },
 )
 
 
@@ -27,7 +33,11 @@ Example = TypedDict(
     "Example",
     {
         "table": I.ColumnBasedTable,
-        "links": Dict[Tuple[int, int], List[str]],
+        "links": Optional[Dict[Tuple[int, int], List[str]]],
+        # the candidate entities for each link, this is optional but if provided,
+        # mtab will use it instead of the ground-truth (prefer unlinked scenario than the linked scenario)
+        # if provided, then the links must also be provided
+        "candidates": Optional[Dict[Tuple[int, int], List[Tuple[str, float]]]],
         "subj_col": Optional[Tuple[int, str]],
     },
 )
@@ -36,7 +46,8 @@ _InternalExample = TypedDict(
     "_InternalExample",
     {
         "table": I.ColumnBasedTable,
-        "links": Dict[Tuple[int, int], List[str]],
+        "links": Optional[Dict[Tuple[int, int], List[str]]],
+        "candidates": Optional[Dict[Tuple[int, int], List[Tuple[str, float]]]],
         "subj_col": Optional[Tuple[int, str]],
         "target_cpa": Optional[m_input.TargetCPA],
         "target_cta": Optional[m_input.TargetCTA],
@@ -49,26 +60,17 @@ def predict(
     examples: List[Example],
     target_cpa_file: Optional[str],
     target_cta_file: Optional[str],
+    qnode_pageranks: Optional[Mapping[str, float]] = None,
 ) -> List[List[Output]]:
     if MyMItem.instance is None:
         m_f.init(is_log=True)
-        MyMItem.init(qnodes, qnode_redirections={})
-
-    # outputs = []
-    # for example in tqdm(examples):
-    #     table_links = {(ri + 1, ci): lst for (ri, ci), lst in example["links"].items()}
-    #     out, runtime = run(
-    #         source_type=SourceType.OBJ,
-    #         source=convert_table(example["table"]),
-    #         table_name=example["table"].table_id,
-    #         table_headers=[0],
-    #         table_links=table_links,
-    #         table_core_attribute=example["subj_col"][0]
-    #         if example["subj_col"] is not None
-    #         else None,
-    #     )
-
-    #     outputs.append(process_output(out))
+        MyMItem.init(
+            qnodes, qnode_redirections={}, qnode_pageranks=qnode_pageranks or {}
+        )
+    else:
+        logger.info(
+            "predict function is called multiple times, make sure that qnodes and pageranks are the same"
+        )
 
     if target_cpa_file is not None:
         assert target_cta_file is not None
@@ -84,6 +86,7 @@ def predict(
         e: _InternalExample = {
             "table": example["table"],
             "links": example["links"],
+            "candidates": example["candidates"],
             "subj_col": example["subj_col"],
             # "target_cea": target_cea,
             "target_cpa": tar_cpa.get(
@@ -101,23 +104,38 @@ def predict(
 
     outputs = []
     outputs.append(predict_one_example(new_examples[0]))
-    outputs += M.parallel_map(predict_one_example, new_examples[1:], show_progress=True)
+    if len(new_examples) > 1:
+        outputs += M.parallel_map(
+            predict_one_example, new_examples[1:], show_progress=True
+        )
     return outputs
 
 
 def predict_one_example(example: _InternalExample):
     if example["target_cpa"] is not None or example["target_cta"] is not None:
         target_cea = m_input.TargetCEA(example["table"].table_id)
+        assert example["links"] is not None
         for (ri, ci), entity_id in example["links"].items():
             target_cea.add(ri + 1, ci, entity_id)
     else:
         target_cea = None
 
-    table_links = {(ri + 1, ci): lst for (ri, ci), lst in example["links"].items()}
+    if example["candidates"] is not None:
+        table_candidates = {
+            (ri + 1, ci): lst for (ri, ci), lst in example["candidates"].items()
+        }
+    else:
+        table_candidates = None
+
+    if example["links"] is not None:
+        table_links = {(ri + 1, ci): lst for (ri, ci), lst in example["links"].items()}
+    else:
+        table_links = None
 
     if example["subj_col"] is not None:
         table_core_attribute = example["subj_col"][0]
     elif example["target_cpa"] is not None:
+        assert example["target_cta"] is not None
         # another way is to use the target_cpa and target_cta
         table_core_attribute = example["target_cpa"].core_attribute()
         if table_core_attribute is None:
@@ -137,6 +155,7 @@ def predict_one_example(example: _InternalExample):
         table_name=example["table"].table_id,
         table_headers=[0],
         table_links=table_links,
+        table_candidates=table_candidates,
         table_core_attribute=table_core_attribute,
     )
     return process_output(out)
@@ -145,6 +164,7 @@ def predict_one_example(example: _InternalExample):
 def process_output(out: dict) -> Output:
     cpa = []
     cta = {}
+    cea = {}
     for tbl_id, source, target, props in out["res_cpa"]:
         prop = props[0]
         cpa.append((source, target, prop))
@@ -153,9 +173,13 @@ def process_output(out: dict) -> Output:
         type = types[0]
         cta[col] = type
 
+    for tbl_id, ri, ci, entid in out["res_cea"]:
+        cea[ri - 1, ci] = entid
+
     return {
         "cpa": cpa,
         "cta": cta,
+        "cea": cea,
         "out": {k: v for k, v in out.items() if k not in {"__links", "tar"}},
     }
 

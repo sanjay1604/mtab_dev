@@ -13,16 +13,29 @@ class MyMItem:
     instance = None
 
     def __init__(
-        self, qnodes: Mapping[str, WDEntity], qnode_redirections: Mapping[str, str]
+        self,
+        qnodes: Mapping[str, WDEntity],
+        qnode_redirections: Mapping[str, str],
+        qnode_pageranks: Mapping[str, float],
     ):
         self.qnodes = qnodes
         self.qnode_redirections = qnode_redirections
+        self.qnode_pageranks = qnode_pageranks
 
     @staticmethod
-    def init(qnodes: Mapping[str, WDEntity], qnode_redirections: Mapping[str, str]):
+    def init(
+        qnodes: Mapping[str, WDEntity],
+        qnode_redirections: Mapping[str, str],
+        qnode_pageranks: Mapping[str, float],
+    ):
         assert MyMItem.instance is None
-        MyMItem.instance = MyMItem(qnodes, qnode_redirections)
+        MyMItem.instance = MyMItem(qnodes, qnode_redirections, qnode_pageranks)
         m_f.cf.m_wiki_items = MyMItem.instance
+
+    ###############################################################################
+    # new functions goes here
+    def get_pagerank(self, wd_id: str) -> float:
+        return self.qnode_pageranks[wd_id]
 
     ###############################################################################
     # modified functions goes here
@@ -175,6 +188,15 @@ class MyMItem:
             return {qid: self.get_label(qid) for qid in qnode_types}
         else:
             return qnode_types
+
+    def get_wikipedia_title(self, wd_id: str):
+        qnode = self.qnodes[wd_id]
+        if "enwiki" in qnode.sitelinks:
+            return qnode.sitelinks["enwiki"].title
+
+        if len(qnode.sitelinks) == 0:
+            return ""
+        return next(iter(qnode.sitelinks.values())).title
 
     ###############################################################################
     # below are functions that are copied from api/resources/m_item.py
