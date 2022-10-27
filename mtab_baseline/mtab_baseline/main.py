@@ -5,7 +5,7 @@ from pathlib import Path
 
 # sys.path.append(str(root_dir))
 
-from typing import Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
+from typing import Dict, List, Literal, Mapping, Optional, Set, Tuple, TypedDict, Union
 from sm.prelude import I, M, O
 from kgdata.wikidata.models import WDEntity
 from m_config import SourceType
@@ -27,7 +27,6 @@ Output = TypedDict(
         "out": dict,
     },
 )
-
 
 Example = TypedDict(
     "Example",
@@ -51,6 +50,7 @@ _InternalExample = TypedDict(
         "subj_col": Optional[Tuple[int, str]],
         "target_cpa": Optional[m_input.TargetCPA],
         "target_cta": Optional[m_input.TargetCTA],
+        "target_cea": Optional[m_input.TargetCEA],
     },
 )
 
@@ -60,6 +60,15 @@ def predict(
     examples: List[Example],
     target_cpa_file: Optional[str],
     target_cta_file: Optional[str],
+    target_cea_file: Optional[
+        Union[
+            str,
+            Dict[
+                str,
+                List[Tuple[int, int, Optional[Set[str]]]],
+            ],
+        ]
+    ],
     qnode_pageranks: Optional[Mapping[str, float]] = None,
 ) -> List[List[Output]]:
     if MyMItem.instance is None:
@@ -72,6 +81,7 @@ def predict(
             "predict function is called multiple times, make sure that qnodes and pageranks are the same"
         )
 
+    # parse the target cpa, cta, cea
     if target_cpa_file is not None:
         assert target_cta_file is not None
         tar_cta, n_cta = m_input.parse_target_cta(target_cta_file)
@@ -80,6 +90,19 @@ def predict(
         assert target_cta_file is None
         tar_cpa = None
         tar_cta = None
+
+    if target_cea_file is not None:
+        if isinstance(target_cea_file, str):
+            tar_cea, n_cea = m_input.parse_target_cea(target_cea_file)
+        else:
+            assert isinstance(target_cea_file, dict)
+            tar_cea = {}
+            for table_id, lst in target_cea_file.items():
+                tar_cea[table_id] = m_input.TargetCEA(table_id)
+                for ri, ci, gt_cea in lst:
+                    tar_cea[table_id].add(ri + 1, ci, gt_cea)
+    else:
+        tar_cea = None
 
     new_examples: List[_InternalExample] = []
     for i, example in enumerate(examples):
@@ -98,6 +121,11 @@ def predict(
                 example["table"].table_id, m_input.TargetCTA(example["table"].table_id)
             )
             if tar_cta is not None
+            else None,
+            "target_cea": tar_cea.get(
+                example["table"].table_id, m_input.TargetCEA(example["table"].table_id)
+            )
+            if tar_cea is not None
             else None,
         }
         new_examples.append(e)
@@ -149,7 +177,7 @@ def predict_one_example(example: _InternalExample):
     out, runtime = run(
         source_type=SourceType.OBJ,
         source=convert_table(example["table"]),
-        tar_cea=target_cea,
+        tar_cea=example["target_cea"],
         tar_cta=example["target_cta"],
         tar_cpa=example["target_cpa"],
         table_name=example["table"].table_id,

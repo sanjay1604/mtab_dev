@@ -1178,7 +1178,7 @@ def run(table_obj, limit=cf.LIMIT_GEN_CAN, search_mode="a"):
             "run_time": time() - start,
         }
     )
-
+    # print(log_m)
     return table_obj
 
 
@@ -1353,14 +1353,15 @@ def generate_candidates_from_given_lists(table_obj, limit: int):
 
             if (r_i, c_i) in candidates:
                 lst = candidates[r_i, c_i]
-                # min-max scaling score similar to mtab api
-                scores = [s for _, s in lst]
-                smin = min(scores)
-                smax = max(scores)
-                if smax > smin:
-                    lst = [(qid, (s - smin) / (smax - smin)) for qid, s in lst]
-                else:
-                    lst = [(qid, 1) for qid, s in lst]
+                if len(lst) > 0:
+                    # min-max scaling score similar to mtab api
+                    scores = [s for _, s in lst]
+                    smin = min(scores)
+                    smax = max(scores)
+                    if smax > smin:
+                        lst = [(qid, (s - smin) / (smax - smin)) for qid, s in lst]
+                    else:
+                        lst = [(qid, 1) for qid, s in lst]
                 cans[r_i][c_i] = list(get_wd_score(c_obj, lst).items())
     return cans
 

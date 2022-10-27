@@ -259,8 +259,10 @@ def predict_targets(
     predict_target=False,
 ):
     is_predicted = False
-    if tar_cea is None and tar_cta is None and tar_cpa is None:
+    # >>> MODIFIED START: instead of using AND, use OR
+    if tar_cea is None or tar_cta is None or tar_cpa is None:
         predict_target = True
+    # <<< MODIFIED END
 
     if predict_target:
         if not tar_cta:

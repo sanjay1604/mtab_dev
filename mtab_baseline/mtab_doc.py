@@ -54,6 +54,16 @@ class n:
 )
 
 (
+  n(mtab_baseline.annotator.m_structure.run, "predicting the structure of the table")
+  .step(360, "call", mtab_baseline.annotator.m_structure.predict_targets, "predict target cea, cta, and cpa")
+)
+
+(
+  n(mtab_baseline.annotator.m_structure.predict_targets, "predicting the target cea, cta, and cpa of the table")
+  .step(begin, 264, "test if we need to predict the targets. MTab code is to only perform the check if three targets are not provided. We modify it to predict if any of the target is not provided, as their later logic does only predict the missing targets")
+)
+
+(
   n(mtab_baseline.annotator.m_semantic.run, "semantic annotation -- do the prediction for one table")
   .step(begin, 344, "generate candidate entities")
   .nstep(340, "call", mtab_baseline.annotator.m_semantic.generate_candidates_from_given_lists, "if __candidates (our modification for unlinked tables) are provided")
