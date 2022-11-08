@@ -10,9 +10,10 @@ packages = [
     { include = "api_f" },
     { include = "m_config.py" },
 ]
+
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-sem-desc = "^3.9.0"
+sem-desc = "^4.1.0"
 kgdata = "^3.2.0"
 charamel = "^1.0.0"
 clevercsv = "0.6.8"
