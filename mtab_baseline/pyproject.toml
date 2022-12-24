@@ -13,8 +13,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-sem-desc = "^4.1.0"
-kgdata = "^3.2.0"
+sem-desc = "^4.1.6"
+kgdata = "^3.3.0"
 charamel = "^1.0.0"
 clevercsv = "0.6.8"
 ftfy = "^6.1.1"
@@ -40,10 +40,10 @@ click = ">=8.0.0,<=8.0.4"
 [tool.poetry.dev-dependencies]
 black = "^22.10.0"
 ipykernel = "^6.16.0"
-ream2 = "^1.2.0"
-osin = "^1.4.0"
-ned = "^1.0.0"
-sm-grams = "^2.1.6"
+ream2 = "^1.6.2"
+osin = "^1.9.1"
+ned = "^1.3.0"
+sm-grams = "^2.1.7"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
