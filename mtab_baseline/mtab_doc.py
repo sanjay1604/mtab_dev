@@ -36,11 +36,11 @@ class n:
 (
   n(mtab_baseline.main.predict, "Main Entrance of MTab, do the prediction for multiple tables")
   .step(begin, 64, "gather target cpa & cta")
-  .step(remain, "for each table calls", mtab_baseline.main.predict_one_example, "to predict for one table")
+  .step(remain, "for each table calls", mtab_baseline.main._internal_predict, "to predict for one table")
 )
 
 (
-  n(mtab_baseline.main.predict_one_example, "Do the prediction for one table.")
+  n(mtab_baseline.main._internal_predict, "Do the prediction for one table.")
   .step(begin, 98, "generate target CEA for each link if target CPA & CTA are given")
   .step(102, 113, "if provided by users, give MTab the table's core attribute")
   .step(remain, "call", mtab_baseline.annotator.main.run, "to do the real prediction")
@@ -73,7 +73,7 @@ class n:
 
 (
   n(mtab_baseline.annotator.m_semantic.generate_candidates, "generate candidate entities by m_entity_search")
-  .step(293, "search for the candidates of a cell at row r_i, col c_i by calling", api.lookup.m_entity_search.search)
+  .step(293, "search for the candidates of a cell at row r_i, col c_i of the predicted cea target by calling", api.lookup.m_entity_search.search)
 )
 
 (

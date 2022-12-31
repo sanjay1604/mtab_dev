@@ -1,22 +1,13 @@
-import sys
-from pathlib import Path
+from typing import Dict, List, Mapping, Optional, Set, Tuple, TypedDict, Union
 
-# root_dir = Path(__file__).absolute().parent.parent.parent
-
-# sys.path.append(str(root_dir))
-
-from typing import Dict, List, Literal, Mapping, Optional, Set, Tuple, TypedDict, Union
-from sm.prelude import I, M, O
-from kgdata.wikidata.models import WDEntity
-from m_config import SourceType
-from tqdm.auto import tqdm
 from api import m_f
-from mtab_baseline.annotator.main import run
-from sm.prelude import I, M, O
-from mtab_baseline.resources.m_item import MyMItem
-from kgdata.wikidata.db import get_entity_db, get_entity_redirection_db
 from api.annotator import m_input
-from loguru import logger
+from m_config import SourceType
+from mtab_baseline.annotator.main import m_preprocess, m_structure, run
+from mtab_baseline.resources.m_item import MyMItem
+
+from kgdata.wikidata.models import WDEntity
+from sm.prelude import I
 
 Output = TypedDict(
     "MTab",
@@ -25,6 +16,15 @@ Output = TypedDict(
         "cta": Dict[int, str],
         "cea": Dict[Tuple[int, int], str],
         "out": dict,
+    },
+)
+
+TargetOutput = TypedDict(
+    "TableTargetOutput",
+    {
+        "cpa": m_input.TargetCPA,
+        "cta": m_input.TargetCTA,
+        "cea": m_input.TargetCEA,
     },
 )
 
@@ -55,6 +55,16 @@ _InternalExample = TypedDict(
 )
 
 
+has_init = False
+
+
+def init_mtab():
+    global has_init
+    if not has_init:
+        m_f.init(is_log=True)
+        has_init = True
+
+
 def predict(
     qnodes: Mapping[str, WDEntity],
     examples: List[Example],
@@ -70,16 +80,10 @@ def predict(
         ]
     ],
     qnode_pageranks: Optional[Mapping[str, float]] = None,
-) -> List[List[Output]]:
-    if MyMItem.instance is None:
-        m_f.init(is_log=True)
-        MyMItem.init(
-            qnodes, qnode_redirections={}, qnode_pageranks=qnode_pageranks or {}
-        )
-    else:
-        logger.info(
-            "predict function is called multiple times, make sure that qnodes and pageranks are the same"
-        )
+) -> List[Output]:
+    # init global variables
+    init_mtab()
+    MyMItem.init(qnodes, qnode_redirections={}, qnode_pageranks=qnode_pageranks or {})
 
     # parse the target cpa, cta, cea
     if target_cpa_file is not None:
@@ -131,15 +135,38 @@ def predict(
         new_examples.append(e)
 
     outputs = []
-    outputs.append(predict_one_example(new_examples[0]))
-    if len(new_examples) > 1:
-        outputs += M.parallel_map(
-            predict_one_example, new_examples[1:], show_progress=True
-        )
+    for newex in new_examples:
+        outputs.append(_internal_predict(newex))
+
+    # shutdown global variables
+    MyMItem.deinit()
     return outputs
 
 
-def predict_one_example(example: _InternalExample):
+def predict_targets(
+    tables: list[I.ColumnBasedTable],
+) -> list[TargetOutput]:
+    init_mtab()
+    outputs: list[TargetOutput] = []
+    for table in tables:
+        table_name = table.table_id
+        source_type = SourceType.OBJ
+        source = convert_table(table)
+
+        # copy most of the code from mtab_baseline.annotator.main.run
+        table_obj = m_preprocess.run(source_type, source, table_name)
+        m_structure.run(
+            table_obj, tar_cea=None, tar_cta=None, tar_cpa=None, predict_target=True
+        )
+        tar_cea: m_input.TargetCEA = table_obj["tar"]["cea"]
+        tar_cta: m_input.TargetCTA = table_obj["tar"]["cta"]
+        tar_cpa: m_input.TargetCPA = table_obj["tar"]["cpa"]
+
+        outputs.append({"cea": tar_cea, "cta": tar_cta, "cpa": tar_cpa})
+    return outputs
+
+
+def _internal_predict(example: _InternalExample):
     if example["target_cpa"] is not None or example["target_cta"] is not None:
         target_cea = m_input.TargetCEA(example["table"].table_id)
         assert example["links"] is not None

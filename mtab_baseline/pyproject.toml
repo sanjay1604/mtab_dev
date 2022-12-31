@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mtab_baseline"
-version = "2.0.3"
+version = "2.1.0"
 description = ""
 authors = ["Binh Vu <binh@toan2.com>"]
 license = "MIT"

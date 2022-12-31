@@ -32,6 +32,11 @@ class MyMItem:
         MyMItem.instance = MyMItem(qnodes, qnode_redirections, qnode_pageranks)
         m_f.cf.m_wiki_items = MyMItem.instance
 
+    @staticmethod
+    def deinit():
+        m_f.cf.m_wiki_items = None
+        MyMItem.instance = None
+
     ###############################################################################
     # new functions goes here
     def get_pagerank(self, wd_id: str) -> float:
