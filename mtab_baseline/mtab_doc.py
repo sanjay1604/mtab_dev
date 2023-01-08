@@ -69,6 +69,7 @@ class n:
   .nstep(340, "call", mtab_baseline.annotator.m_semantic.generate_candidates_from_given_lists, "if __candidates (our modification for unlinked tables) are provided")
   .nstep(342, "call", mtab_baseline.annotator.m_semantic.generate_candidates_from_links, "if __links (our modification for linked tables) are provided")
   .nstep(344, "call", mtab_baseline.annotator.m_semantic.generate_candidates, "if __links are not provided -- mtab original code to generate candidate entities")
+  .step(590, 593, "update the scores of a candidate entity discovered from a matched property. the candidate entity can be the one discovered from the relationships so it doesn't have to be in the list of given canddiates. (e.g., Great Britain is an alias of UK and if we do not search by alias, we will miss it but MTab can recover from this.)")
 )
 
 (
