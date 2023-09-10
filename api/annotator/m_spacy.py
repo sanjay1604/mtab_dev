@@ -184,21 +184,75 @@ if __name__ == "__main__":
             "ogre battle: the march of the black queen (900 wii points)"
         )
     )
-    print(obj_spacy.get_majority_type("1 The Secret of the Old Clock"))
-    print(obj_spacy.get_majority_type("This is a sentence"))
-    print(obj_spacy.get_majority_type("4111-1111-1111-1111"))
-    print(obj_spacy.get_majority_type("6 miles"))
+    print(
+        "1 The Secret of the Old Clock",
+        obj_spacy.get_majority_type("1 The Secret of the Old Clock"),
+        obj_spacy.get_type("1 The Secret of the Old Clock"),
+    )
+    print(
+        "This is a sentence",
+        obj_spacy.get_majority_type("This is a sentence"),
+        obj_spacy.get_type("This is a sentence"),
+    )
+    print(
+        "4111-1111-1111-1111",
+        obj_spacy.get_majority_type("4111-1111-1111-1111"),
+        obj_spacy.get_type("4111-1111-1111-1111"),
+    )
+    print(
+        "6 miles", obj_spacy.get_majority_type("6 miles"), obj_spacy.get_type("6 miles")
+    )
     # print(obj_spacy.get_types('6 Meilen', "de"))
-    print(obj_spacy.get_majority_type("6 Meilen"))
-    print(obj_spacy.get_majority_type("3 mins"))
-    print(obj_spacy.get_majority_type("duckling-team@fb.com"))
-    print(obj_spacy.get_majority_type("eighty eight"))
-    print(obj_spacy.get_majority_type("33rd"))
-    print(obj_spacy.get_majority_type("+1 (650) 123-4567"))
-    print(obj_spacy.get_majority_type("3 cups of sugar"))
-    print(obj_spacy.get_majority_type("80F"))
-    print(obj_spacy.get_majority_type("today at 9am"))
-    print(obj_spacy.get_majority_type("42€ = 12$"))
-    print(obj_spacy.get_majority_type("6 miles in 7 mins"))
-    print(obj_spacy.get_majority_type("https://api.wit.ai/message?q=hi"))
-    print(obj_spacy.get_majority_type("4 gallons"))
+    print(
+        "6 Meilen",
+        obj_spacy.get_majority_type("6 Meilen"),
+        obj_spacy.get_type("6 Meilen"),
+    )
+    print("3 mins", obj_spacy.get_majority_type("3 mins"), obj_spacy.get_type("3 mins"))
+    print(
+        "duckling-team@fb.com",
+        obj_spacy.get_majority_type("duckling-team@fb.com"),
+        obj_spacy.get_type("duckling-team@fb.com"),
+    )
+    print(
+        "eighty eight",
+        obj_spacy.get_majority_type("eighty eight"),
+        obj_spacy.get_type("eighty eight"),
+    )
+    print("33rd", obj_spacy.get_majority_type("33rd"), obj_spacy.get_type("33rd"))
+    print(
+        "+1 (650) 123-4567",
+        obj_spacy.get_majority_type("+1 (650) 123-4567"),
+        obj_spacy.get_type("+1 (650) 123-4567"),
+    )
+    print(
+        "3 cups of sugar",
+        obj_spacy.get_majority_type("3 cups of sugar"),
+        obj_spacy.get_type("3 cups of sugar"),
+    )
+    print("80F", obj_spacy.get_majority_type("80F"), obj_spacy.get_type("80F"))
+    print(
+        "today at 9am",
+        obj_spacy.get_majority_type("today at 9am"),
+        obj_spacy.get_type("today at 9am"),
+    )
+    print(
+        "42€ = 12$",
+        obj_spacy.get_majority_type("42€ = 12$"),
+        obj_spacy.get_type("42€ = 12$"),
+    )
+    print(
+        "6 miles in 7 mins",
+        obj_spacy.get_majority_type("6 miles in 7 mins"),
+        obj_spacy.get_type("6 miles in 7 mins"),
+    )
+    print(
+        "https://api.wit.ai/message?q=hi",
+        obj_spacy.get_majority_type("https://api.wit.ai/message?q=hi"),
+        obj_spacy.get_type("https://api.wit.ai/message?q=hi"),
+    )
+    print(
+        "4 gallons",
+        obj_spacy.get_majority_type("4 gallons"),
+        obj_spacy.get_type("4 gallons"),
+    )

@@ -11,7 +11,6 @@ from time import time
 import symspellpy.helpers as helpers
 from symspellpy.suggest_item import SuggestItem
 
-# from rapidfuzz import fuzz, process
 # import pickle
 # from api.utilities import m_sim as sim
 from symspellpy import SymSpell, Verbosity
