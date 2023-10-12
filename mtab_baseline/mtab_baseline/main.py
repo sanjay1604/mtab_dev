@@ -2,11 +2,10 @@ from typing import Dict, List, Mapping, Optional, Set, Tuple, TypedDict, Union
 
 from api import m_f
 from api.annotator import m_input
+from kgdata.wikidata.models import WDEntity
 from m_config import SourceType
 from mtab_baseline.annotator.main import m_preprocess, m_structure, run
 from mtab_baseline.resources.m_item import MyMItem
-
-from kgdata.wikidata.models import WDEntity
 from sm.prelude import I
 
 Output = TypedDict(
@@ -77,6 +76,10 @@ def predict(
                 str,
                 List[Tuple[int, int, Optional[Set[str]]]],
             ],
+            Dict[
+                str,
+                List[Tuple[int, int]],
+            ],
         ]
     ],
     qnode_pageranks: Optional[Mapping[str, float]] = None,
@@ -88,8 +91,23 @@ def predict(
     # parse the target cpa, cta, cea
     if target_cpa_file is not None:
         assert target_cta_file is not None
-        tar_cta, n_cta = m_input.parse_target_cta(target_cta_file)
-        tar_cpa, n_cpa = m_input.parse_target_cpa(target_cpa_file)
+        if isinstance(target_cta_file, str):
+            tar_cta, n_cta = m_input.parse_target_cta(target_cta_file)
+        else:
+            tar_cta = {}
+            for table_id, lst in target_cta_file.items():
+                tar_cta[table_id] = m_input.TargetCTA(table_id)
+                for ci in lst:
+                    tar_cta[table_id].add(ci)
+
+        if isinstance(target_cpa_file, str):
+            tar_cpa, n_cpa = m_input.parse_target_cpa(target_cpa_file)
+        else:
+            tar_cpa = {}
+            for table_id, lst in target_cpa_file.items():
+                tar_cpa[table_id] = m_input.TargetCPA(table_id)
+                for ci, cj in lst:
+                    tar_cpa[table_id].add(ci, cj)
     else:
         assert target_cta_file is None
         tar_cpa = None
@@ -103,7 +121,11 @@ def predict(
             tar_cea = {}
             for table_id, lst in target_cea_file.items():
                 tar_cea[table_id] = m_input.TargetCEA(table_id)
-                for ri, ci, gt_cea in lst:
+                for item in lst:
+                    if len(item) == 2:
+                        ri, ci, gt_cea = item[0], item[1], None
+                    else:
+                        ri, ci, gt_cea = item
                     tar_cea[table_id].add(ri + 1, ci, gt_cea)
     else:
         tar_cea = None
@@ -167,13 +189,13 @@ def predict_targets(
 
 
 def _internal_predict(example: _InternalExample):
-    if example["target_cpa"] is not None or example["target_cta"] is not None:
-        target_cea = m_input.TargetCEA(example["table"].table_id)
-        assert example["links"] is not None
-        for (ri, ci), entity_id in example["links"].items():
-            target_cea.add(ri + 1, ci, entity_id)
-    else:
-        target_cea = None
+    # if example["target_cpa"] is not None or example["target_cta"] is not None:
+    #     target_cea = m_input.TargetCEA(example["table"].table_id)
+    #     assert example["links"] is not None
+    #     for (ri, ci), entity_id in example["links"].items():
+    #         target_cea.add(ri + 1, ci, entity_id)
+    # else:
+    #     target_cea = None
 
     if example["candidates"] is not None:
         table_candidates = {
