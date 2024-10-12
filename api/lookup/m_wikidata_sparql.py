@@ -1,16 +1,18 @@
 import logging
 from time import sleep
 from SPARQLWrapper import SPARQLWrapper, JSON
-import api.m_f
+import m_f as  f
 from collections import defaultdict
 import m_config as cf
+import m_setting as st
 from tqdm import *
 from multiprocessing.pool import Pool
 from contextlib import closing
 import sys
-from api.utilities import m_sim, m_io as iw
+from api.utilities import m_sim as sim, m_io as iw
 from api.utilities import m_utils as ul
 import ssl
+from textblob import TextBlob
 
 
 class Sparql_Wikidata(object):

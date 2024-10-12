@@ -1,7 +1,7 @@
-import f
+import m_f as f
 from utilities import io_worker as iw
 from googleapiclient.discovery import build
-import setting as st
+import m_setting as st
 from collections import defaultdict
 
 
@@ -48,7 +48,7 @@ class Google(object):
         return corrected_text
 
 
-import httplib
+import http.client as httplib
 import xml.dom.minidom
 
 data = """

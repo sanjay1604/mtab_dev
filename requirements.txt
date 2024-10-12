@@ -131,7 +131,7 @@ orjson==3.6.1
 
 # mtab/api/annotator/m_preprocess.py: 7
 # mtab/api/semtab/m_entity_search.py: 282
-pandas==1.1.3
+pandas==2.2.3
 
 # mtab/api/annotator/m_preprocess.py: 8
 # mtab/api/utilities/m_io.py: 30

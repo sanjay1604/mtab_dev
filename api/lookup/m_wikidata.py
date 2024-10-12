@@ -1,14 +1,14 @@
 import requests
-import f
+import m_f as f
 import re
-import setting as st
+import m_setting as st
 from bs4 import BeautifulSoup
 from multiprocessing.pool import Pool
 from tqdm import *
 from contextlib import closing
 from collections import defaultdict
 from utilities import similarities as sim, io_worker as iw
-import utils as ul
+import utilities.m_utils as ul
 
 
 class Lookup_Wikidata(object):

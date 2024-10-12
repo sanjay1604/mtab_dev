@@ -9,9 +9,10 @@ import lmdb
 import msgpack
 import numpy as np
 import orjson
+import fdb
 
-# import quickle
-import rocksdb
+import quickle
+import rocksdb3 as rocksdb
 import snappy
 from api.resources.m_db_fuzzy import DBDupInt
 from tqdm import tqdm
@@ -20,7 +21,7 @@ import api.utilities.m_io as iw
 import m_config as cf
 from api.resources.m_db_item import DBItem, DBItemDefault, deserialize
 
-# from api.resources.m_db_rocks import DBItemRocks
+from api.resources.m_db_rocks import DBItemRocks
 from api.resources.m_item import MItem
 import api.utilities.m_utils as ul
 from lz4 import frame

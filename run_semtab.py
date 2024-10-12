@@ -6,7 +6,7 @@ from time import time, sleep
 from multiprocessing import Pool
 
 import requests
-from requests.packages.urllib3.util.retry import Retry
+from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from tqdm import tqdm
 

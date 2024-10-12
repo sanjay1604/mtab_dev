@@ -1,9 +1,10 @@
 import requests
 from collections import defaultdict
 import re
-from api import m_f
+from api import m_f as f
 
 import m_config as cf
+import m_setting as st
 import urllib
 from api.utilities import m_io as iw
 from api.utilities import m_utils as ul
@@ -237,8 +238,8 @@ def query_lk(n_cpu):
 
 
 if __name__ == "__main__":
-    m_f.init()
-    m_f.m_corrector()
+    f.init()
+    f.m_corrector()
     searcher = LookupWikipedia()
     temp = searcher.search("DJ Sorryyouwastedyourmoneytobehere")
     temp = searcher.search("Kanawha Couqty")

@@ -884,10 +884,10 @@ class DBDeletes(DBItem):
 
                 for delete in edits:
                     if len(delete) >= min_len:
-                        db_deletes.add(delete, words_id)
+                        DBDeletes.add(delete, words_id)
                 if i and i % 1000 == 0:
                     p_bar.set_description(update_desc())
-            db_deletes.save(see_progress=True)
+            DBDeletes.save(see_progress=True)
 
     def save(self, see_progress=False, buff_limit=cf.SIZE_512MB):
         # Save items

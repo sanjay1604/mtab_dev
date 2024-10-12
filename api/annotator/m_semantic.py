@@ -5,6 +5,7 @@ import numpy as np
 import os
 import re
 from api import m_f
+from api.annotator import main
 from api.annotator import m_input
 from api.lookup import m_entity_search
 from api.utilities import m_io as iw
@@ -1210,12 +1211,12 @@ def annotate(dir_tables, dir_cea, dir_cta, dir_cpa, n_cpu=1, is_screen=False):
 
         if n_cpu == 1:
             for input_args in args:
-                output_args = pool_table_annotation(input_args)
+                output_args = main.pool_table_annotation(input_args)
                 update_p_bar()
 
         else:
             with closing(Pool(processes=n_cpu)) as p:
-                for output_args in p.imap_unordered(pool_table_annotation, args):
+                for output_args in p.imap_unordered(main.pool_table_annotation, args):
                     update_p_bar()
 
     return cea, cta, cpa

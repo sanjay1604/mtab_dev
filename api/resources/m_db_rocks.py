@@ -21,7 +21,7 @@ from api.utilities import m_io as iw
 import gc
 from api.utilities import m_utils as ul
 import os
-import rocksdb
+import rocksdb3 as rocksdb
 
 
 def set_default(obj):

@@ -3,13 +3,13 @@ import sys
 import requests
 from utilities import io_worker as iw
 import re
-import setting as st
+import m_setting as st
 from collections import defaultdict, Counter
 from multiprocessing.pool import Pool
 from contextlib import closing
 from tqdm import *
-import f
-import utils as ul
+import m_f as f
+import api.utilities.m_utils as ul
 
 
 class Wikidata_Hist(object):

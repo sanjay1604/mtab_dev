@@ -8,12 +8,8 @@ import zlib
 from api.resources.m_db_item import DBItem
 from api.resources.m_item_labels import MEntityLabels
 from collections import defaultdict
-from contextlib import closing
 
 import lmdb
-import msgpack
-import numpy as np
-from lz4 import frame
 from tqdm import tqdm
 
 import m_config as cf

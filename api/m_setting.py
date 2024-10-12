@@ -1,9 +1,9 @@
 # Change this value to your project directory
-DIR_ROOT = "/Users/phucnguyen/git/mtab"
+DIR_ROOT = "C:/Users/sriks/source/repos/mtab_dev"
 
 DOMAIN_ONLINE = "https://mtab.app"
 DOMAIN_LOCAL = "http://0.0.0.0:5000"
-DOMAIN = DOMAIN_ONLINE
+DOMAIN = DOMAIN_LOCAL
 
 # Dataset Directories
 dir_tables = DIR_ROOT + "/data/{challenge}/{data_name}/tables"
